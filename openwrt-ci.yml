@@ -42,9 +42,52 @@ jobs:
           sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
+          
+          wget -O - https://raw.githubusercontent.com/friendlyarm/build-env-on-ubuntu-bionic/master/install.sh | bash
+      
+      - name: Install repo
+        run: |
+          git clone https://github.com/friendlyarm/repo
+          sudo cp repo/repo /usr/bin/
+          
+      - name: Download Source
+        run: |
+          mkdir friendlywrt-h5
+          cd friendlywrt-h5
+          repo init -u https://github.com/friendlyarm/friendlywrt_manifests -b master -m h5.xml --repo-url=https://github.com/friendlyarm/repo  --no-clone-bundle
+          repo sync -c  --no-clone-bundle
+      
+      - name: Merge upStearm OpenWrt
+        run: |
+          rm -rf friendlywrt
+          mkdir friendlywrt
+          cd friendlywrt
+          git init
+          git config user.email abc@abc.com
+          git config user.name abc
+          git remote add origin https://github.com/friendlyarm/friendlywrt.git
+          git remote add upstream https://github.com/openwrt/openwrt.git
+          git pull origin master-v18.06.1
+          git pull upstream openwrt-18.06 --no-edit
+      
+      - name: Merge LEDE
+        run: |
+          cd ../ 
+          git clone https://github.com/coolsnowwolf/lede
+          cp -r ./lede/package/lean ./friendlywrt/package/
+          
+          cd friendlywrt
+          
+          sed -i 's/https:\/\/git.openwrt.org\/project\/luci.git;openwrt-18.06/https:\/\/github.com\/coolsnowwolf\/luci/' feeds.conf.default  
 
+      - name: Update Target.mk
+        run: |
+          cd include 
+          sed -i 's/dnsmasq /dnsmasq-full default-settings luci/' include/target.mk    
+          
       - name: Update feeds
         run: |
+          cd ../
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
@@ -87,16 +130,99 @@ jobs:
           # 
 
           # 编译x64固件:
-          # cat >> .config <<EOF
+          cat >> .config <<EOF
           # CONFIG_TARGET_x86=y
           # CONFIG_TARGET_x86_64=y
           # CONFIG_TARGET_x86_64_Generic=y
-          # EOF
-
-          # 固件压缩:
+          
+          CONFIG_MODULES=y
+          CONFIG_HAVE_DOT_CONFIG=y
+          CONFIG_TARGET_sunxi=y
+          
+          CONFIG_TARGET_sunxi_cortexa53=y
+          CONFIG_TARGET_sunxi_cortexa53_DEVICE_sun50i-h5-nanopi-neo-plus2=y
+          
+          CONFIG_HAS_SUBTARGETS=y
+          CONFIG_HAS_DEVICES=y
+          CONFIG_TARGET_BOARD="sunxi"
+          CONFIG_TARGET_SUBTARGET="cortexa53"
+          CONFIG_TARGET_PROFILE="DEVICE_sun50i-h5-nanopi-neo-plus2"
+          CONFIG_TARGET_ARCH_PACKAGES="aarch64_cortex-a53"
+          CONFIG_DEFAULT_TARGET_OPTIMIZATION="-Os -pipe -mcpu=cortex-a53"
+          CONFIG_CPU_TYPE="cortex-a53"
+          CONFIG_LINUX_4_14=y
+          CONFIG_DEFAULT_base-files=y
+          CONFIG_DEFAULT_brcmfmac-firmware-43430-sdio=y
+          CONFIG_DEFAULT_busybox=y
+          CONFIG_DEFAULT_dnsmasq-full=y
+          CONFIG_DEFAULT_dropbear=y
+          CONFIG_DEFAULT_e2fsprogs=y
+          CONFIG_DEFAULT_firewall=y
+          CONFIG_DEFAULT_fstools=y
+          CONFIG_DEFAULT_ip6tables=y
+          CONFIG_DEFAULT_iptables=y
+          CONFIG_DEFAULT_iwinfo=y
+          CONFIG_DEFAULT_kmod-brcmfmac=y
+          CONFIG_DEFAULT_kmod-ipt-offload=y
+          CONFIG_DEFAULT_kmod-leds-gpio=y
+          CONFIG_DEFAULT_kmod-ledtrig-heartbeat=y
+          CONFIG_DEFAULT_kmod-rtc-sunxi=y
+          CONFIG_DEFAULT_libc=y
+          CONFIG_DEFAULT_libgcc=y
+          CONFIG_DEFAULT_logd=y
+          CONFIG_DEFAULT_mkf2fs=y
+          CONFIG_DEFAULT_mtd=y
+          CONFIG_DEFAULT_netifd=y
+          CONFIG_DEFAULT_odhcp6c=y
+          CONFIG_DEFAULT_odhcpd-ipv6only=y
+          CONFIG_DEFAULT_opkg=y
+          CONFIG_DEFAULT_partx-utils=y
+          CONFIG_DEFAULT_ppp=y
+          CONFIG_DEFAULT_ppp-mod-pppoe=y
+          CONFIG_DEFAULT_uboot-envtools=y
+          CONFIG_DEFAULT_uci=y
+          CONFIG_DEFAULT_uclient-fetch=y
+          CONFIG_DEFAULT_wpad-mini=y
+          CONFIG_HAS_FPU=y
+          CONFIG_AUDIO_SUPPORT=y
+          CONFIG_GPIO_SUPPORT=y
+          CONFIG_USB_SUPPORT=y
+          CONFIG_RTC_SUPPORT=y
+          CONFIG_USES_DEVICETREE=y
+          CONFIG_USES_SQUASHFS=y
+          CONFIG_USES_EXT4=y
+          CONFIG_ARCH_64BIT=y
+          CONFIG_aarch64=y
+          CONFIG_arm_v7=y
+          CONFIG_ARCH="aarch64"
+          
+          CONFIG_EXTERNAL_CPIO=""
+          
+          CONFIG_TARGET_ROOTFS_EXT4FS=y
+          CONFIG_TARGET_EXT4_RESERVED_PCT=0
+          CONFIG_TARGET_EXT4_BLOCKSIZE_4K=y
+          CONFIG_TARGET_EXT4_BLOCKSIZE=4096
+          CONFIG_TARGET_ROOTFS_SQUASHFS=y
+          CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=256
+          CONFIG_TARGET_UBIFS_FREE_SPACE_FIXUP=y
+          CONFIG_TARGET_UBIFS_JOURNAL_SIZE=""
+          CONFIG_TARGET_IMAGES_GZIP=y
+          
+          EOF
+          
           # cat >> .config <<EOF
-          # CONFIG_TARGET_IMAGES_GZIP=y
-          # EOF
+          
+          #
+          # Image Options
+          #
+          CONFIG_SUNXI_SD_BOOT_PARTSIZE=20
+          CONFIG_TARGET_ROOTFS_PARTSIZE=256
+          
+          EOF
+          # 固件压缩:
+          cat >> .config <<EOF
+          CONFIG_TARGET_IMAGES_GZIP=y
+          EOF
 
           # 编译UEFI固件:
           # cat >> .config <<EOF
@@ -120,14 +246,64 @@ jobs:
           # EOF
 
           # USB3.0支持:
-          # cat >> .config <<EOF
-          # CONFIG_PACKAGE_kmod-usb-ohci=y
-          # CONFIG_PACKAGE_kmod-usb-ohci-pci=y
-          # CONFIG_PACKAGE_kmod-usb2=y
-          # CONFIG_PACKAGE_kmod-usb2-pci=y
-          # CONFIG_PACKAGE_kmod-usb3=y
-          # EOF
+          cat >> .config <<EOF
+          CONFIG_PACKAGE_kmod-usb-ohci=y
+          CONFIG_PACKAGE_kmod-usb-ohci-pci=y
+          CONFIG_PACKAGE_kmod-usb2=y
+          CONFIG_PACKAGE_kmod-usb2-pci=y
+          CONFIG_PACKAGE_kmod-usb3=y
+          EOF
+          
+          
+          
+          CONFIG_SIGNED_PACKAGES=y
+          CONFIG_SIGNATURE_CHECK=y
 
+          #
+          # General build options
+          #
+          CONFIG_DISPLAY_SUPPORT=y
+          # CONFIG_BUILD_PATENTED is not set
+          # CONFIG_BUILD_NLS is not set
+          CONFIG_SHADOW_PASSWORDS=y
+          # CONFIG_CLEAN_IPKG is not set
+          # CONFIG_INCLUDE_CONFIG is not set
+          # CONFIG_COLLECT_KERNEL_DEBUG is not set
+
+          #
+          # Kernel build options
+          #
+          CONFIG_KERNEL_BUILD_USER=""
+          CONFIG_KERNEL_BUILD_DOMAIN=""
+          CONFIG_KERNEL_PRINTK=y
+          CONFIG_KERNEL_CRASHLOG=y
+          CONFIG_KERNEL_SWAP=y
+          CONFIG_KERNEL_DEBUG_FS=y
+          # CONFIG_KERNEL_ARM_PMU is not set
+          # CONFIG_KERNEL_PERF_EVENTS is not set
+          # CONFIG_KERNEL_PROFILING is not set
+          CONFIG_KERNEL_KALLSYMS=y
+          # CONFIG_KERNEL_FTRACE is not set
+          CONFIG_KERNEL_DEBUG_KERNEL=y
+          CONFIG_KERNEL_DEBUG_INFO=y
+          # CONFIG_KERNEL_DYNAMIC_DEBUG is not set
+          # CONFIG_KERNEL_KPROBES is not set
+          # CONFIG_KERNEL_AIO is not set
+          # CONFIG_KERNEL_FHANDLE is not set
+          # CONFIG_KERNEL_FANOTIFY is not set
+          # CONFIG_KERNEL_BLK_DEV_BSG is not set
+          CONFIG_KERNEL_MAGIC_SYSRQ=y
+          # CONFIG_KERNEL_DEBUG_PINCTRL is not set
+          # CONFIG_KERNEL_DEBUG_GPIO is not set
+          CONFIG_KERNEL_COREDUMP=y
+          CONFIG_KERNEL_ELF_CORE=y
+          # CONFIG_KERNEL_PROVE_LOCKING is not set
+          CONFIG_KERNEL_PRINTK_TIME=y
+          # CONFIG_KERNEL_SLABINFO is not set
+          # CONFIG_KERNEL_PROC_PAGE_MONITOR is not set
+          CONFIG_KERNEL_KEXEC=y
+
+          
           # 常用LuCI插件选择:
           # cat >> .config <<EOF
           # CONFIG_PACKAGE_luci-app-adbyby-plus=y
