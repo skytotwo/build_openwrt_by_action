@@ -74,7 +74,7 @@ jobs:
         run: |
           cd ../ 
           git clone https://github.com/coolsnowwolf/lede
-          cp -r ./lede/package/lean ./friendlywrt/package/
+          cp -a ./lede/package/lean friendlywrt/package/
           
           cd friendlywrt
           
