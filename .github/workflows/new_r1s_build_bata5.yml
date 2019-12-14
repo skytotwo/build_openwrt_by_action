@@ -7,7 +7,7 @@
 #
 # Write by Jolly 2019/12/7
 
-name: NanoPi-R1s H5 OpenWrt Build New4
+name: NanoPi-R1s H5 OpenWrt Build New5
 
 on:
   push:
@@ -99,6 +99,13 @@ jobs:
         run: |
           cd friendlywrt-h5
           ./build.sh nanopi_r1s.mk
+          
+      - name: Build Result Check
+        if: failure()
+        run: |
+            cd friendlywrt-h5
+            make clean
+            make V=99
       
       - name: Zip Files
         run: |
