@@ -7,7 +7,7 @@
 #
 # Write by Jolly 2019/12/7
 
-name: NanoPi-R1s H5 OpenWrt Build New2
+name: NanoPi-R1s H5 OpenWrt Build New3
 
 on:
   push:
