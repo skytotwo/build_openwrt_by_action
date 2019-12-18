@@ -7,7 +7,7 @@
 #
 # Write by Jolly 2019/12/7
 
-name: NanoPi-R1s H5 OpenWrt Build
+name: NanoPi-R1s H5 OpenWrt 19.07
 
 on:
   push:
@@ -53,7 +53,9 @@ jobs:
           cd friendlywrt-h5
           cd .repo/manifests
           rm -f ./h5.xml
-          wget https://raw.githubusercontent.com/skytotwo/transferUtils/master/h5.xml
+          wget https://raw.githubusercontent.com/skytotwo/transferUtils/master/h5_19.07.xml
+          cp h5_19.07.xml h5.xml
+          rm -rf ./h5_19.07.xml
           repo sync -c  --no-clone-bundle
       
       - name: Merge LEDE
@@ -61,8 +63,9 @@ jobs:
           cd friendlywrt-h5
           git clone https://github.com/coolsnowwolf/lede
           cd friendlywrt
-          cp -r ../lede/package/lean package/         
-          sed -i 's/https:\/\/git.openwrt.org\/project\/luci.git;openwrt-18.06/https:\/\/github.com\/coolsnowwolf\/luci/' feeds.conf.default  
+          cp -r ../lede/package/lean package/
+          sed -i 's/https:\/\/git.openwrt.org\/project\/luci.git;openwrt-19.07/https:\/\/github.com\/coolsnowwolf\/luci/' feeds.conf.default
+          sed -i 's/https:\/\/git.openwrt.org\/feed\/packages.git;openwrt-19.07/https:\/\/github.com\/coolsnowwolf\/packages/' feeds.conf.default          
           
       - name: Update Target.mk
         run: |
@@ -79,7 +82,7 @@ jobs:
         run: |
           cd friendlywrt-h5/friendlywrt
           rm -f ./.config*
-          wget https://raw.githubusercontent.com/skytotwo/build_openwrt_by_action/master/r1s-h5-config
+          wget https://raw.githubusercontent.com/skytotwo/NanoPi-R1S-Build-By-Actions/master/r1s-h5-config
           cp r1s-h5-config .config
       
       - name: Download package
