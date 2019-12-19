@@ -7,7 +7,7 @@
 #
 # Write by Jolly 2019/12/7
 
-name: r1s_new 19.07 网友提供 测试1
+name: r1s_new 19.07 网友提供 测试2
 
 on:
   push:
@@ -64,8 +64,8 @@ jobs:
           git clone https://github.com/coolsnowwolf/lede
           cd friendlywrt
           cp -r ../lede/package/lean package/
-          sed -i 's/https:\/\/git.openwrt.org\/project\/luci.git;openwrt-19.07/https:\/\/github.com\/coolsnowwolf\/luci/' feeds.conf.default
-          sed -i 's/https:\/\/git.openwrt.org\/feed\/packages.git;openwrt-19.07/https:\/\/github.com\/coolsnowwolf\/packages/' feeds.conf.default          
+          sed -i 's/https:\/\/git.openwrt.org\/project\/luci.git^039ef1f4deba725d3591b159bbc9569885d68131/https:\/\/github.com\/coolsnowwolf\/luci/' feeds.conf.default
+          sed -i 's/https:\/\/git.openwrt.org\/feed\/packages.git^00803ffc91e80b16e9c1603ff32106d42e255923/https:\/\/github.com\/coolsnowwolf\/packages/' feeds.conf.default          
       
       - name: Custom Applications
         run: |
