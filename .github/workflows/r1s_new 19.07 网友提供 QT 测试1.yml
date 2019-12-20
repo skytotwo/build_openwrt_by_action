@@ -7,7 +7,7 @@
 #
 # Write by Jolly 2019/12/7
 
-name: r1s_new 19.07 网友提供 测试2
+name: r1s_new 19.07 网友提供 QT 测试1
 
 on:
   push:
@@ -53,7 +53,7 @@ jobs:
           cd friendlywrt-h5
           cd .repo/manifests
           rm -f ./h5.xml
-          wget https://raw.githubusercontent.com/skytotwo/transferUtils/master/h5_19.07.xml
+          wget https://raw.githubusercontent.com/skytotwo/NanoPi-R1S-Build-By-Actions/master/source_xml/h5_19.07.xml
           cp h5_19.07.xml h5.xml
           rm -rf ./h5_19.07.xml
           repo sync -c  --no-clone-bundle
@@ -87,7 +87,7 @@ jobs:
         run: |
           cd friendlywrt-h5/friendlywrt
           rm -f ./.config*
-          wget https://raw.githubusercontent.com/skytotwo/transferUtils/master/r1s-h5-config
+          wget https://raw.githubusercontent.com/skytotwo/build_openwrt_by_action/master/r1s-h5-config
           cp r1s-h5-config .config
       
       - name: Download package
@@ -115,5 +115,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
-          name: FriendlyWrt_NanoPi-R1S
+          name: FriendlyWrt_NanoPi-R1S H5 v19.07
           path: ./artifact/
